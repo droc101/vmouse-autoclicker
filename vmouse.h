@@ -56,9 +56,10 @@ private:
     FILE *device = nullptr;
 
     enum class VCommand: uint8_t {
-        CMD_RESET,
-        CMD_DOWN,
-        CMD_UP
+        CMD_RESET = 0,
+        CMD_DOWN = 1,
+        CMD_UP = 2,
+        CMD_CLICK = 3,
     };
 
     /**

@@ -15,9 +15,9 @@ bool vmouse::open() {
 }
 
 void vmouse::command(VCommand cmd, VButton pld) {
-    uint8_t c = (static_cast<uint8_t>(cmd) & 0b11) << 6;
-    uint8_t p = static_cast<uint8_t>(pld) & 0b111111;
-    uint8_t combined = c | p;
+    uint8_t c = static_cast<uint8_t>(cmd) & 0b1111;
+    uint8_t p = static_cast<uint8_t>(pld) & 0b111;
+    uint8_t combined = (c << 4) | p;
     fwrite(&combined, 1, 1, device);
     fflush(device);
 }
@@ -35,6 +35,5 @@ void vmouse::release(VButton btn) {
 }
 
 void vmouse::click(VButton btn) {
-    press(btn);
-    release(btn);
+    command(VCommand::CMD_CLICK, btn);
 }
