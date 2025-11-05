@@ -24,15 +24,26 @@ public:
 
 private:
     Ui::MainWindow *ui;
+
+    /// The vmouse device interface
     vmouse mouse{};
+
+    /// Whether the program is currently autoclicing
     bool enabled = false;
+    /// What button the program is autoclicking
     vmouse::VButton button;
+    /// The number of clicks per iteration
+    int numClicks = 1;
+    /// The number of times to click, -1 to go until stopped manually
+    int numRepeats = -1;
+
+    /// The autoclick timer
     QTimer timer{};
 
-    void exitClicked();
-
+    /// Start or stop autoclicking
     void toggle();
 
     void timeout();
+    void repeatCountChanged(int newValue);
 };
 #endif // MAINWINDOW_H

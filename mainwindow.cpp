@@ -13,7 +13,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     setFixedSize(size());
-    connect(ui->exitButton, &QPushButton::clicked, this, &MainWindow::exitClicked);
 
     if (!mouse.open()) {
         QMessageBox::critical(this, "Failed to open vmouse device", "Failed to open the vmouse device. Please ensure you have the requires permissions and the module is loaded.");
@@ -30,6 +29,11 @@ MainWindow::MainWindow(QWidget *parent)
     buttons.append("Back");
     buttons.append("Task");
     ui->mouseButtonCombo->addItems(buttons);
+
+    ui->clickType->addItem("Single");
+    ui->clickType->addItem("Double");
+    ui->clickType->addItem("Triple");
+    ui->clickType->addItem("Quadruple");
 
     QAction *action = new QAction(this);
     action->setText("Toggle VMouse Autoclicker");
@@ -53,6 +57,8 @@ MainWindow::MainWindow(QWidget *parent)
     timer.setSingleShot(false);
     timer.setTimerType(Qt::PreciseTimer);
     QObject::connect(&timer, &QTimer::timeout, this, &MainWindow::timeout);
+
+    connect(ui->repeatCount, &QSpinBox::valueChanged, this, &MainWindow::repeatCountChanged);
 }
 
 MainWindow::~MainWindow()
@@ -60,27 +66,46 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-
-void MainWindow::exitClicked() {
-    close();
-}
-
 void MainWindow::toggle() {
     enabled = !enabled;
     if (enabled) {
-        ui->kled->on();
+        ui->kled->setColor(QColor(0,255,0));
         button = static_cast<vmouse::VButton>(ui->mouseButtonCombo->currentIndex());
+        if (ui->repeatForever->isChecked()) {
+            numRepeats = -1;
+        } else {
+            numRepeats = ui->repeatCount->value();
+        }
+        numClicks = ui->clickType->currentIndex() + 1;
         timer.start(ui->frequencySpinBox->value());
+        timeout();
     } else {
-        ui->kled->off();
+        ui->kled->setColor(QColor(255,0,0));
         timer.stop();
     }
     ui->frequencySpinBox->setEnabled(!enabled);
     ui->mouseButtonCombo->setEnabled(!enabled);
+    ui->clickType->setEnabled(!enabled);
+    ui->repeatCount->setEnabled(!enabled);
+    ui->repeatForever->setEnabled(!enabled);
+    ui->repeatLimited->setEnabled(!enabled);
 }
 
 void MainWindow::timeout() {
     if (enabled) {
-        mouse.click(button);
+        for (int i = 0; i < numClicks; i++) {
+            mouse.click(button);
+        }
+
+        if (numRepeats != -1) {
+            numRepeats--;
+            if (numRepeats == 0) {
+                toggle();
+            }
+        }
     }
+}
+
+void MainWindow::repeatCountChanged(int newValue) {
+    ui->repeatLimited->setChecked(true);
 }
